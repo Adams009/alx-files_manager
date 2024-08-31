@@ -1,6 +1,4 @@
-import mongodb from 'mongodb';
-// eslint-disable-next-line no-unused-vars
-import Collection from 'mongodb/lib/collection';
+import { MongoClient } from 'mongodb';
 import envLoader from './env_loader';
 
 /**
@@ -17,8 +15,15 @@ class DBClient {
     const database = process.env.DB_DATABASE || 'files_manager';
     const dbURL = `mongodb://${host}:${port}/${database}`;
 
-    this.client = new mongodb.MongoClient(dbURL, { useUnifiedTopology: true });
-    this.client.connect();
+    this.client = new MongoClient(dbURL, { useUnifiedTopology: true });
+    this.client.connect()
+      .then(() => {
+        console.log('Connected to MongoDB');
+      })
+      .catch(err => {
+        console.error('Failed to connect to MongoDB', err);
+        throw err; // Make sure the error is propagated
+      });
   }
 
   /**
@@ -34,7 +39,8 @@ class DBClient {
    * @returns {Promise<Number>}
    */
   async nbUsers() {
-    return this.client.db().collection('users').countDocuments();
+    const db = this.client.db();
+    return db.collection('users').countDocuments();
   }
 
   /**
@@ -42,23 +48,26 @@ class DBClient {
    * @returns {Promise<Number>}
    */
   async nbFiles() {
-    return this.client.db().collection('files').countDocuments();
+    const db = this.client.db();
+    return db.collection('files').countDocuments();
   }
 
   /**
-   * Retrieves a reference to the `users` collection.
+   * Retrieves a reference to the users collection.
    * @returns {Promise<Collection>}
    */
   async usersCollection() {
-    return this.client.db().collection('users');
+    const db = this.client.db();
+    return db.collection('users');
   }
 
   /**
-   * Retrieves a reference to the `files` collection.
+   * Retrieves a reference to the files collection.
    * @returns {Promise<Collection>}
    */
   async filesCollection() {
-    return this.client.db().collection('files');
+    const db = this.client.db();
+    return db.collection('files');
   }
 }
 
